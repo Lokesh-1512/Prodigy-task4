@@ -1,0 +1,23 @@
+def train_step(input_image, target, generator, discriminator):
+    with tf.GradientTape() as gen_tape, tf.GradientTape() as disc_tape:
+        generated_image = generator(input_image, training=True)
+        
+        disc_real_output = discriminator([input_image, target], training=True)
+        disc_generated_output = discriminator([input_image, generated_image], training=True)
+        
+        gen_loss = generator_loss(disc_generated_output, generated_image, target)
+        disc_loss = discriminator_loss(disc_real_output, disc_generated_output)
+        
+    generator_gradients = gen_tape.gradient(gen_loss, generator.trainable_variables)
+    discriminator_gradients = disc_tape.gradient(disc_loss, discriminator.trainable_variables)
+    
+    generator_optimizer.apply_gradients(zip(generator_gradients, generator.trainable_variables))
+    discriminator_optimizer.apply_gradients(zip(discriminator_gradients, discriminator.trainable_variables))
+    
+    return gen_loss, disc_loss
+
+def train(dataset, generator, discriminator, epochs):
+    for epoch in range(epochs):
+        for input_image, target in dataset:
+            gen_loss, disc_loss = train_step(input_image, target, generator, discriminator)
+        print(f"Epoch: {epoch+1}, Gen
